@@ -30,7 +30,7 @@ if command -v consul ; then  # executable found:
     # Consul v1.12.2
     # Revision 19041f20
     # Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol >2 when speaking to compatible agents)
-    if [[ "${RESPONSE}" == *"${LATEST_VERSION}"* ]]; then  # contains it:
+    if [[ "${LATEST_VERSION}" == *"${RESPONSE}"* ]]; then  # contains it:
         echo "${RESPONSE}"
         if [[ "${CONSUL_VERSION}" == *"${LATEST_VERSION}"* ]]; then  # contains it:
             echo "*** consul binary is already at the latest version ${LATEST_VERSION}."
@@ -64,15 +64,20 @@ echo "*** Obtain HashiCorp's public asc file (7177 bytes)"
                         #  https://github.com/sethvargo/hashicorp-installer/blob/master/hashicorp.asc
 # curl -o hashicorp.asc https://raw.githubusercontent.com/sethvargo/hashicorp-installer/master/hashicorp.asc
 if [ ! -f "hashicorp.asc" ]; then  # not found:
+    # Get PGP Signature from a commonly trusted 3rd-party (Keybase):
     curl -o hashicorp.asc https://keybase.io/hashicorp/pgp_keys.asc
-    curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > hashicorp.asc
+    # curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > hashicorp.asc
     # From https://circleci.com/developer/orbs/orb/jmingtan/hashicorp-vault
-# Note https://keybase.io/hashicorp says 34365D9472D7468F
+    # Note https://keybase.io/hashicorp says 34365D9472D7468F
+    # This asc is applicable to all HashiCorp products.
 fi
 
-# TODO: Install gpg if needed
 if command -v gpg ; then
-    # This is the public key from above - one-time step.   # applicable to all HashiCorp products
+    # Install gpg if needed: see https://wilsonmar.github.io/git-signing
+    echo "*** Installing GPG2 ..."
+    brew install gpg
+fi
+# No Check if asc file is already been imported into keychain (a one-time process).
     gpg --import hashicorp.asc  
     # gpg: key 34365D9472D7468F: public key "HashiCorp Security (hashicorp.com/security) <security@hashicorp.com>" imported
     # gpg: Total number processed: 1
@@ -87,9 +92,9 @@ gpg --fingerprint C874011F0AB405110D02105534365D9472D7468F
     # uid           [ unknown] HashiCorp Security (hashicorp.com/security) <security@hashicorp.com>
     # sub   rsa4096 2021-04-19 [E] [expires: 2026-04-18]
     # sub   rsa4096 2021-04-21 [S] [expires: 2026-04-20]
-    # NOTE: It's not expired?
+# TODO: How to check if this has expired?
 
-# TODO: Install wget if needed
+# Install wget if needed
 if ! command -v wget ; then
    brew install wget
 fi
@@ -134,7 +139,7 @@ RESPONSE=$( shasum -a 256 -c "consul_${CONSUL_VERSION}_SHA256SUMS" 2>/dev/null |
     # shasum: consul_1.12.2+ent_darwin_amd64.zip: No such file or directory
     # consul_1.12.2+ent_darwin_amd64.zip: FAILED open or read
     # consul_1.12.2+ent_darwin_arm64.zip: OK
-if [[ "${RESPONSE}" == *"${EXPECTED_TEXT}"* ]]; then  # contains it:
+if [[ "${EXPECTED_TEXT}" == *"${RESPONSE}"* ]]; then  # contains it:
     echo "*** Download verified: ${EXPECTED_TEXT} "
 else
     echo "*** ${EXPECTED_TEXT} FAILED verification: ${RESPONSE}"
