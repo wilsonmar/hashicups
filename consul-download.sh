@@ -87,15 +87,22 @@ fi
     # gpg:               imported: 1
 fi  # see https://www.vaultproject.io/docs/concepts/pgp-gpg-keybase
 
-# The response we want is specified in https://www.hashicorp.com/security#pgp-public-keys
-# Verify we want key ID 72D7468F and fingerprint C874 011F 0AB4 0511 0D02 1055 3436 5D94 72D7 468F. 
-gpg --fingerprint C874011F0AB405110D02105534365D9472D7468F
+gpg --show-keys hashicorp.asc
     # pub   rsa4096 2021-04-19 [SC] [expires: 2026-04-18]
     #       C874 011F 0AB4 0511 0D02  1055 3436 5D94 72D7 468F
     # uid           [ unknown] HashiCorp Security (hashicorp.com/security) <security@hashicorp.com>
     # sub   rsa4096 2021-04-19 [E] [expires: 2026-04-18]
     # sub   rsa4096 2021-04-21 [S] [expires: 2026-04-20]
-# TODO: How to check if this has expired?
+    # The "C874..." fingerprint is used for verification:
+# Verify we want key ID 72D7468F and fingerprint C874 011F 0AB4 0511 0D02 1055 3436 5D94 72D7 468F. 
+gpg --fingerprint "C874 011F 0AB4 0511 0D02  1055 3436 5D94 72D7 468F"
+    # The response we want is specified in https://www.hashicorp.com/security#pgp-public-keys
+    # pub   rsa4096 2021-04-19 [SC] [expires: 2026-04-18]
+    #       C874 011F 0AB4 0511 0D02  1055 3436 5D94 72D7 468F
+    # uid           [ unknown] HashiCorp Security (hashicorp.com/security) <security@hashicorp.com>
+    # sub   rsa4096 2021-04-19 [E] [expires: 2026-04-18]
+    # sub   rsa4096 2021-04-21 [S] [expires: 2026-04-20]
+# TODO: Script automated check if this has expired?
 
 # Install wget if needed
 if ! command -v wget ; then
