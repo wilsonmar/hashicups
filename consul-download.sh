@@ -61,15 +61,18 @@ fi
 # Alternately, see https://raw.githubusercontent.com/microsoft/vscode-dev-containers/main/script-library/terraform-debian.sh
 echo "*** Obtain HashiCorp's public asc file (7177 bytes)"
 # Automation of steps described at 
-                        #  https://github.com/sethvargo/hashicorp-installer/blob/master/hashicorp.asc
+                     #  https://github.com/sethvargo/hashicorp-installer/blob/master/hashicorp.asc
 # curl -o hashicorp.asc https://raw.githubusercontent.com/sethvargo/hashicorp-installer/master/hashicorp.asc
 if [ ! -f "hashicorp.asc" ]; then  # not found:
     # Get PGP Signature from a commonly trusted 3rd-party (Keybase):
-    curl -o hashicorp.asc https://keybase.io/hashicorp/pgp_keys.asc
-    # curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > hashicorp.asc
-    # From https://circleci.com/developer/orbs/orb/jmingtan/hashicorp-vault
-    # Note https://keybase.io/hashicorp says 34365D9472D7468F
     # This asc is applicable to all HashiCorp products.
+    curl -o hashicorp.asc https://keybase.io/hashicorp/pgp_keys.asc
+    # ALTERNATELY: curl -s "https://keybase.io/_/api/1.0/key/fetch.json?pgp_key_ids=34365D9472D7468F" | jq -r '.keys | .[0] | .bundle' > hashicorp.asc
+    # See https://circleci.com/developer/orbs/orb/jmingtan/hashicorp-vault
+    # Note https://keybase.io/hashicorp says 34365D9472D7468F
+    # Created 2021-04-19 after the Codedev supply chain attack
+       # See https://discuss.hashicorp.com/t/hcsec-2021-12-codecov-security-event-and-hashicorp-gpg-key-exposure/23512
+       # And https://www.securityweek.com/twilio-hashicorp-among-codecov-supply-chain-hack-victims
 fi
 
 if command -v gpg ; then
@@ -77,7 +80,7 @@ if command -v gpg ; then
     echo "*** Installing GPG2 ..."
     brew install gpg
 fi
-# No Check if asc file is already been imported into keychain (a one-time process).
+# No Using gpg --list-keys @34365D9472D7468F to check if asc file is already been imported into keychain (a one-time process)
     gpg --import hashicorp.asc  
     # gpg: key 34365D9472D7468F: public key "HashiCorp Security (hashicorp.com/security) <security@hashicorp.com>" imported
     # gpg: Total number processed: 1
