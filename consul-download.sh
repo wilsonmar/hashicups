@@ -1,9 +1,61 @@
 #!/usr/bin/env sh
-# This is consul-backup.sh from https://github.com/wilsonmar/hashicups/blob/main/consul-download.sh
-# Coding of shell scripting is explained in https://wilsonmar.github.io/shell-scripts
+# This is consul-download.sh from https://github.com/wilsonmar/hashicups/blob/main/consul-download.sh
+# Instead of using brew (Homebrew)...
+# This downloads and installs "safely" - verifying that what is downloaded has NOT been altered.
+#   1. The fingerprint used here matches what the author saved in Keybase.
+#   2. The author's hash of the downloaded file matches the hash created by the author.
+#   3. Download does not occur if the file already exists in the current folder.
+#   4. Files downloaded are removed because the executable is what is used.
+# Techniques for shell scripting used here are explained at https://wilsonmar.github.io/shell-scripts
 
 # Break on error:
 set -e
+
+# $CONSUL_VERSION_IN and $TARGET_FOLDER_IN specified before invoking this.
+
+# Instead of obtaining manually: https://docs.github.com/en/repositories/releasing-projects-on-github/linking-to-releases
+LATEST_VERSION=$( curl -sL https://api.github.com/repos/hashicorp/consul/releases/latest | jq -r ".tag_name" | cut -c2- )
+
+# Enable run specification of this variable within https://releases.hashicorp.com/consul
+# Thanks to https://fabianlee.org/2021/02/16/bash-determining-latest-github-release-tag-and-version/
+if [ -n "${CONSUL_VERSION_IN}" ]; then  # specified by parameter
+   export CONSUL_VERSION="${CONSUL_VERSION_IN}"
+else
+   # TODO: Enable user selection of +ent or FOSS edition?
+   CONSUL_VERSION="${LATEST_VERSION}+ent"  # for "1.12.2+ent"
+fi
+
+if command -v consul ; then  # executable found:
+    RESPONSE=$( consul --version )
+    # Consul v1.12.2
+    # Revision 19041f20
+    # Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol >2 when speaking to compatible agents)
+    if [[ "${RESPONSE}" == *"${LATEST_VERSION}"* ]]; then  # contains it:
+        echo "${RESPONSE}"
+        if [[ "${CONSUL_VERSION}" == *"${LATEST_VERSION}"* ]]; then  # contains it:
+            echo "*** consul binary is already at the latest version ${LATEST_VERSION}."
+            which consul
+            echo "*** Exiting..."
+            exit
+        else
+            echo "*** consul binary being changed to version ${CONSUL_VERSION}."
+        fi
+    fi
+
+    # NOTE: There are /usr/local/bin/consul and /usr/local/bin/consul-k8s  
+    # There is /opt/homebrew/bin//consul-terraform-sync installed by homebrew
+    # So /usr/local/bin should be at the front of $PATH in .bash_profile or .zshrc
+    echo "*** which consul "
+    which consul
+else
+    echo "*** consul executable not found. Installing ..."
+fi
+
+if [ -n "${TARGET_FOLDER_IN}" ]; then  # specified by parameter
+   TARGET_FOLDER="${TARGET_FOLDER_IN}"
+else
+   TARGET_FOLDER="/usr/local/bin"
+fi
 
 # See https://tinkerlog.dev/journal/verifying-gpg-signatures-history-terms-and-a-how-to-guide
 # Alternately, see https://raw.githubusercontent.com/microsoft/vscode-dev-containers/main/script-library/terraform-debian.sh
@@ -18,6 +70,7 @@ if [ ! -f "hashicorp.asc" ]; then  # not found:
 # Note https://keybase.io/hashicorp says 34365D9472D7468F
 fi
 
+# TODO: Install gpg if needed
 if command -v gpg ; then
     # This is the public key from above - one-time step.   # applicable to all HashiCorp products
     gpg --import hashicorp.asc  
@@ -36,14 +89,10 @@ gpg --fingerprint C874011F0AB405110D02105534365D9472D7468F
     # sub   rsa4096 2021-04-21 [S] [expires: 2026-04-20]
     # NOTE: It's not expired?
 
-# Enable run specification of this variable within https://releases.hashicorp.com/consul
-if [ -n "${CONSUL_VERSION_IN}" ]; then  # specified by parameter
-    export CONSUL_VERSION="${CONSUL_VERSION_IN}" 
-else
-    # blank/unspecified, so use hard-coded last-known good default:
-    export CONSUL_VERSION="1.12.2+ent" 
+# TODO: Install wget if needed
+if ! command -v wget ; then
+   brew install wget
 fi
-
 # for each platform:
 export PLATFORM1=$(echo $(uname) | awk '{print tolower($0)}')
 export PLATFORM=$( echo "${PLATFORM1}"_"$( uname -m )" )
@@ -108,7 +157,6 @@ if [ ! -f "consul" ]; then  # not found:
 fi
 
 # Move consul executable binary to folder in $PATH :
-TARGET_FOLDER="/usr/local/bin"
 mv consul "${TARGET_FOLDER}"
 if [ ! -f "${TARGET_FOLDER}/consul" ]; then  # not found:
    echo "*** ${TARGET_FOLDER}/consul not found after move."
@@ -124,8 +172,18 @@ rm "consul_${CONSUL_VERSION}_SHA256SUMS"
 rm "consul_${CONSUL_VERSION}_SHA256SUMS.72D7468F.sig"
 rm "consul_${CONSUL_VERSION}_SHA256SUMS.sig"
 rm "consul_${CONSUL_VERSION}_${PLATFORM}.zip"
+
+echo "*** Downloaded files removed for consul_${CONSUL_VERSION}."
 # Now you can do git push.
 
-echo "Done downloading consul_${CONSUL_VERSION}."
+RESPONSE=$( consul --version )
+   # Consul v1.12.2
+   # Revision 19041f20
+   # Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol >2 when speaking to compatible agents)
+if [[ "${CONSUL_VERSION}" == *"${RESPONSE}"* ]]; then  # contains it:
+   echo $RESPONSE
+   echo "*** Consul is NOT the desired version ${CONSUL_VERSION} - Aborting."
+   exit
+fi
 
 # END
