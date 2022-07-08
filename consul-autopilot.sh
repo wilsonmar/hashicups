@@ -1,5 +1,6 @@
 # consul-autopilot.sh
 # from https://play.instruqt.com/HashiCorp-EA/tracks/consul-autopilot
+#  and https://play.instruqt.com/hashicorp/tracks/consul-autopilot
 # TODO: See https://github.com/hashicorp/consul-guides
 
 echo "WARNING: There are several TODOs to keep this from working now."
@@ -27,6 +28,7 @@ exit
    # Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol >2 when speaking to compatible agents)
 
 # Identify the version of each node:
+
 ssh -o stricthostkeychecking=no consul-server-1 consul --version
 ssh -o stricthostkeychecking=no consul-server-2 consul --version
 ssh -o stricthostkeychecking=no consul-server-3 consul --version
