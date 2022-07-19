@@ -166,7 +166,7 @@ consul snapshot restore /opt/consul/snapshot/<snapshot-name>
 
 # Make sure to grab one of the first snapshots created. 
 # to view the snapshots in a list:
-ls -l /opt/consul/snapshot 
+ls -l /opt/consul/snapshot
 
 # Reload the Consul UI and navigate to the key/value section.
 

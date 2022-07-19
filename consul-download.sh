@@ -18,7 +18,7 @@
    # SC2046 (warning): Quote this to prevent word splitting.
 
 # Break on error:
-set -e
+set -euxo pipefail
 
 # Can be specified on Terminal before invoking this:
 # export CONSUL_VERSION_IN="1.12.2"
